@@ -9,9 +9,14 @@ import SwiftUI
 
 @main
 struct LunioDaysApp: App {
+    
+    @StateObject private var session = UserSession()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+//            AppDescribeScreenView()
+            MainTabView()
+                .environmentObject(session)
         }
     }
 }
