@@ -9,30 +9,45 @@ import SwiftUI
 
 struct OnboardingQuestionsScreenView: View {
     
-    @State private var pageIndex = 0
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @EnvironmentObject private var session: UserSession
+    @State private var showMainTab = false
     
+    @State private var pageIndex = 0
     @State private var selectedDay: Int = 0
     @State private var selectedMonth: Int = 0
+    @State private var selectedDurationIndex: Int = 3
     
     var body: some View {
-            ZStack {
-                Color.white.ignoresSafeArea()
-
-                VStack {
-                    Spacer()
-
-                    currentPage
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 35)
-                }
+        ZStack {
+            if showMainTab {
+                MainTabView()
+                    .transition(.opacity)
+            } else {
+                onboardingContent
             }
-            .safeAreaInset(edge: .bottom) {
-                bottomSlot
-                    .ignoresSafeArea(edges: .horizontal)
-                    .padding(.bottom, 10)
-            }
-            .animation(.bouncy(duration: 0.6), value: pageIndex)
         }
+        .animation(.easeInOut(duration: 0.35), value: showMainTab)
+    }
+
+    private var onboardingContent: some View {
+        ZStack {
+            Color.white.ignoresSafeArea()
+
+            VStack {
+                Spacer()
+                currentPage
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 35)
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            bottomSlot
+                .ignoresSafeArea(edges: .horizontal)
+                .padding(.bottom, 10)
+        }
+        .animation(.bouncy(duration: 0.6), value: pageIndex)
+    }
     
     private var currentPage: some View {
         Group {
@@ -42,9 +57,8 @@ struct OnboardingQuestionsScreenView: View {
                     selectedDay: $selectedDay,
                     selectedMonth: $selectedMonth
                 )
-
             case 1:
-                PeriodsDurationPickerView()
+                PeriodsDurationPickerView(selectedDurationIndex: $selectedDurationIndex)
             case 2:
                 AvarageCycleDaysPickerView()
             default:
@@ -84,44 +98,77 @@ struct OnboardingQuestionsScreenView: View {
         .buttonStyle(FullWidthButtonStyle())
         .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
     }
-
+    
     private func onNextTap() {
-        if isLastPage {
-            // finish action тут
-            // наприклад: print("Finish")
-        } else {
+        switch pageIndex {
+        case 0:
+            let date = makeLastPeriodStartDate(
+                selectedDayIndex: selectedDay,
+                selectedMonthIndex: selectedMonth
+            )
+            session.updateLastPeriodStarted(date)
             pageIndex += 1
+
+        case 1:
+            let durationDays = selectedDurationIndex + 1
+            session.updatePeriodDuration(durationDays)
+            pageIndex += 1
+
+        case 2:
+            withAnimation(.easeInOut(duration: 0.35)) {
+                hasCompletedOnboarding = true
+                showMainTab = true
+            }
+
+        default:
+            break
         }
     }
     
-//    private var nextButton: some View {
-//        Button("Next") {
-//            let month = Month.allCases[selectedMonth].title
-//            let day = selectedDay + 1
-//            
-//            print("Вибрана дата: \(day) \(month)")
-//            onNextTap()
-//        }
-//        .font(.phetsarath(.bold, size: 24))
-//        .buttonStyle(FullWidthButtonStyle())
-//        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
-//    }
-    
-//    private func onNextTap() {
-//        if pageIndex < 2 {
-//            pageIndex += 1
-//        }
-//    }
-    
     private var notSureButton: some View {
         Button("Not sure") {
-            
+            if isLastPage {
+                withAnimation {
+                    hasCompletedOnboarding = true
+                    showMainTab = true
+                }
+            } else {
+                pageIndex += 1
+            }
         }
         .font(.phetsarath(.regular, size: 20))
         .buttonStyle(OutlineButtonStyle())
     }
+    
+    private func makeLastPeriodStartDate(
+        selectedDayIndex: Int,
+        selectedMonthIndex: Int,
+        today: Date = Date(),
+        calendar: Calendar = .current
+    ) -> Date? {
+
+        let day = selectedDayIndex + 1
+        let month = selectedMonthIndex + 1
+
+        let year = calendar.component(.year, from: today)
+
+        var comps = DateComponents()
+        comps.year = year
+        comps.month = month
+        comps.day = day
+        comps.hour = 12
+
+        guard let dateThisYear = calendar.date(from: comps) else { return nil }
+
+        if dateThisYear > today {
+            comps.year = year - 1
+            return calendar.date(from: comps)
+        } else {
+            return dateThisYear
+        }
+    }
 }
 
-#Preview {
-    OnboardingQuestionsScreenView()
-}
+//#Preview {
+//    OnboardingQuestionsScreenView()
+//}

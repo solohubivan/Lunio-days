@@ -45,13 +45,13 @@ struct PrestartQuestionsScreenView: View {
             baseColor: .brownText,
             highlights: ["begin": ._111])
         )
-        .font(.custom("Petrona-Bold", size: 32))
+        .font(.petrona(.bold, size: 32))
         .multilineTextAlignment(.center)
     }
     
     private var bodyText: some View {
         Text("Answer a few short questions\nto set up your calendar")
-            .font(.custom("phetsarath-regular", size: 20))
+            .font(.phetsarath(.regular, size: 20))
             .foregroundColor(.brownText)
             .multilineTextAlignment(.center)
     }
@@ -66,7 +66,7 @@ struct PrestartQuestionsScreenView: View {
         Button("Start") {
             showOnboardingQuestionsViewScreen = true
         }
-        .font(.custom("phetsarath-bold", size: 24))
+        .font(.phetsarath(.bold, size: 24))
         .buttonStyle(FullWidthButtonStyle())
         .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
         .padding(.horizontal, 20)

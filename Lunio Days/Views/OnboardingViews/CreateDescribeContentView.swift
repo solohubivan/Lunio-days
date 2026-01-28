@@ -38,7 +38,7 @@ struct CreateDescribeContentView: View {
     
     private var infoLabel: some View {
         Text(bodyText)
-            .font(.custom("phetsarath-regular", size: 20))
+            .font(.phetsarath(.regular, size: 20))
             .foregroundColor(.brownText)
             .multilineTextAlignment(.center)
             .padding(.vertical, 10)

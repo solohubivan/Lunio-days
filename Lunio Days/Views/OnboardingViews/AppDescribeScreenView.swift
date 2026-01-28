@@ -42,7 +42,6 @@ struct AppDescribeScreenView: View {
         )
     ]
     
-    
     var body: some View {
         ZStack {
             mainOnboarding

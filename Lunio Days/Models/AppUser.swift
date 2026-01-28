@@ -11,4 +11,10 @@ struct AppUser: Codable {
     var userImage: String
     var userName: String
     var periodDay: Bool
+    var initialUserInfo: InitialUserInfo?
+}
+
+struct InitialUserInfo: Codable {
+    var lastPeriodStarted: Date?
+    var periodDuration: Int?
 }

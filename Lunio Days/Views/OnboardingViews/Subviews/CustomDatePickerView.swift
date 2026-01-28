@@ -15,6 +15,7 @@ struct CustomDatePickerView: View {
     @State private var dayItems: [String] = (1...Month.january.daysCount).map(String.init)
 
     @State private var dayScrollTrigger: Int = 0
+    @State private var monthScrollTrigger: Int = 0
 
     var body: some View {
         ZStack {
@@ -47,7 +48,8 @@ struct CustomDatePickerView: View {
                     textColor: .brownText,
                     selectedFont: .phetsarath(.bold, size: 24),
                     selectedColor: .black,
-                    dimmedOpacity: 0.25
+                    dimmedOpacity: 0.25,
+                    scrollTrigger: monthScrollTrigger
                 )
                 .frame(width: 150)
             }
@@ -58,6 +60,10 @@ struct CustomDatePickerView: View {
 
             let monthIndex = calendar.component(.month, from: today) - 1
             let dayIndex = calendar.component(.day, from: today) - 1
+            
+            DispatchQueue.main.async {
+                setPicker(dayIndex: dayIndex, monthIndex: monthIndex)
+            }
 
             selectedMonth = clamp(monthIndex, 0, Month.allCases.count - 1)
             syncDaysForMonth(selectedMonth)
@@ -87,6 +93,17 @@ struct CustomDatePickerView: View {
 
     private func clamp(_ value: Int, _ min: Int, _ max: Int) -> Int {
         Swift.max(min, Swift.min(max, value))
+    }
+    
+    private func setPicker(dayIndex: Int, monthIndex: Int) {
+        selectedMonth = clamp(monthIndex, 0, Month.allCases.count - 1)
+        syncDaysForMonth(selectedMonth)
+
+        let maxDayIndex = max(dayItems.count - 1, 0)
+        selectedDay = clamp(dayIndex, 0, maxDayIndex)
+
+        monthScrollTrigger += 1
+        dayScrollTrigger += 1
     }
 }
 

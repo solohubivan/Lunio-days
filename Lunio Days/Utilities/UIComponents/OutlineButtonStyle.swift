@@ -20,6 +20,7 @@ struct OutlineButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity)
             .frame(height: height)
             .background(Color.clear)
+            .contentShape(Rectangle())
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .stroke(strokeColor, lineWidth: 1)

@@ -21,10 +21,43 @@ final class UserSession: ObservableObject {
         if let saved = Self.load(from: storageKey) {
             self.user = saved
         } else {
-            self.user = AppUser(userImage: "defaultUserImage", userName: "Username", periodDay: false)
+            self.user = AppUser(
+                userImage: "defaultUserImage",
+                userName: "Username",
+                periodDay: false,
+                initialUserInfo: nil
+            )
             Self.save(self.user, to: storageKey)
         }
     }
+    
+    func updateLastPeriodStarted(_ date: Date?) {
+            if user.initialUserInfo == nil {
+                user.initialUserInfo = InitialUserInfo(
+                    lastPeriodStarted: nil,
+                    periodDuration: nil
+                )
+            }
+
+            user.initialUserInfo?.lastPeriodStarted = date
+            Self.save(user, to: storageKey)
+        }
+
+    func updatePeriodDuration(_ value: Int?) {
+        if user.initialUserInfo == nil {
+            user.initialUserInfo = InitialUserInfo(
+                lastPeriodStarted: nil,
+                periodDuration: nil
+            )
+        }
+        user.initialUserInfo?.periodDuration = value
+        Self.save(user, to: storageKey)
+    }
+
+        
+    
+    
+    
     
     func startPeriod() {
         user.periodDay = true
