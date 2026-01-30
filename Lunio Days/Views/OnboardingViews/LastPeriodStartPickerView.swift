@@ -34,7 +34,3 @@ struct LastPeriodStartPickerView: View {
         .multilineTextAlignment(.center)
     }
 }
-
-//#Preview {
-//    LastPeriodStartPickerView(selectedDay: 5, selectedMonth: )
-//}

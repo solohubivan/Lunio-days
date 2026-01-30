@@ -46,7 +46,6 @@ struct MainTabView: View {
                 .zIndex(1)
             }
             
-            // ✅ Privacy Policy overlay (БЕЗ blur)
             if showPrivacyPolicy {
                 PrivacyPolicyView(onBack: {
                     showPrivacyPolicy = false
@@ -55,7 +54,6 @@ struct MainTabView: View {
                 .zIndex(20)
             }
 
-            // ✅ Terms overlay (якщо потрібно окремо)
             if showTerms {
                 TermsOfUseView(onBack: {
                     showTerms = false
@@ -75,7 +73,6 @@ struct MainTabView: View {
         case 0:
             HomeScreenView(selectedTab: $selectedTab, calendarSelectedDate: $calendarSelectedDate)
         case 1:
-//            CalendarScreenView(selectedTab: $selectedTab)
             CalendarScreenView(selectedTab: $selectedTab, selectedDate: $calendarSelectedDate)
         case 2:
             CheckInMainScreenView(selectedTab: $selectedTab, calendarSelectedDate: $calendarSelectedDate)
@@ -99,10 +96,9 @@ private struct CustomTabBarView: View {
         HStack {
             tabButton(systemImage: "homeTabbarIcon", index: 0)
             Spacer()
-//            tabButton(systemImage: "calendarTabbarIcon", index: 1)
             tabButton(systemImage: "calendarTabbarIcon", index: 1, onTap: {
-                            calendarSelectedDate = Calendar.current.startOfDay(for: Date())
-                        })
+                calendarSelectedDate = Calendar.current.startOfDay(for: Date())
+            })
             Spacer()
             tabButton(systemImage: "checkTabbarIcon", index: 2)
             Spacer()

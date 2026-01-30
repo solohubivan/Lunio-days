@@ -11,27 +11,35 @@ import CoreData
 struct HomeScreenView: View {
     @Binding var selectedTab: Int
     @Binding var calendarSelectedDate: Date
-    
-//    @State private var calendarSelectedDate: Date = Date()
-    
+
     @Environment(\.managedObjectContext) private var context
     @EnvironmentObject private var session: UserSession
     @Environment(\.scenePhase) private var scenePhase
 
-    private let calendar = Calendar.current
+    @StateObject private var vm: HomeScreenViewModel
 
-    @State private var calendarRefreshTrigger: Int = 0
-    @State private var isTodayPeriodDay: Bool = false
-    @State private var isTodayCheckInCompleted: Bool = false
+    init(
+        selectedTab: Binding<Int>,
+        calendarSelectedDate: Binding<Date>,
+        context: NSManagedObjectContext? = nil
+    ) {
+        self._selectedTab = selectedTab
+        self._calendarSelectedDate = calendarSelectedDate
+
+        let ctx = context ?? CoreDataStack.shared.context
+        _vm = StateObject(wrappedValue: HomeScreenViewModel(context: ctx))
+    }
 
     var body: some View {
         VStack {
             weekCalendar
+
             currentDate
+
             CurrentStateView(
-                isPeriodDay: isTodayPeriodDay,
-                onStartPeriod: startPeriodToday,
-                onEndPeriod: endPeriodToday
+                isPeriodDay: vm.isTodayPeriodDay,
+                onStartPeriod: { vm.startPeriodToday(session: session) },
+                onEndPeriod: { vm.endPeriodToday(session: session) }
             )
             .background(Color.white)
             .cornerRadius(35)
@@ -42,48 +50,35 @@ struct HomeScreenView: View {
                 .padding(.horizontal, 30)
                 .padding(.vertical, 20)
         }
-        .onAppear {
-            syncTodayIfNeeded()
-//            let manager = DayRecordsManager(context: context)
-//                try? manager.deleteAllDayRecords()
-            }
+        .onAppear { vm.onAppear(session: session) }
         .onChange(of: scenePhase) { phase in
             if phase == .active {
-                syncTodayIfNeeded()
+                vm.onBecameActive(session: session)
             }
         }
     }
-    
+
     private var weekCalendar: some View {
-//        WeekCalendarView(refreshTrigger: calendarRefreshTrigger)
         WeekCalendarView(
             selectedTab: $selectedTab,
             calendarSelectedDate: $calendarSelectedDate,
-            refreshTrigger: calendarRefreshTrigger
+            refreshTrigger: vm.calendarRefreshTrigger
         )
-            .frame(height: 85)
-            .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 2)
-            .shadow(color: .black.opacity(0.15), radius: 2, x: 0, y: -1)
+        .frame(height: 85)
+        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 2)
+        .shadow(color: .black.opacity(0.15), radius: 2, x: 0, y: -1)
     }
-    
+
     private var currentDate: some View {
         HStack {
-            Text(formattedTodayDate)
+            Text(vm.formattedTodayDate)
                 .font(.phetsarath(.regular, size: 24))
                 .foregroundColor(.black)
-
             Spacer()
         }
         .padding(.leading, 20)
     }
 
-    private var formattedTodayDate: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "EEEE, d MMM"
-        return formatter.string(from: Date())
-    }
-    
     private var checkInButton: some View {
         Button {
             withAnimation(.easeInOut(duration: 0.25)) {
@@ -103,31 +98,28 @@ struct HomeScreenView: View {
                         .scaledToFit()
                         .padding(25)
 
-                    Text(isTodayCheckInCompleted ? "Today’s check-in\ncompleted" : "Complete today’s\ncheck-in")
-                        .multilineTextAlignment(.leading)
-                        .font(.phetsarath(.bold, size: 16))
-                        .foregroundColor(.white)
+                    Text(vm.isTodayCheckInCompleted
+                         ? "Today’s check-in\ncompleted"
+                         : "Complete today’s\ncheck-in"
+                    )
+                    .multilineTextAlignment(.leading)
+                    .font(.phetsarath(.bold, size: 16))
+                    .foregroundColor(.white)
 
                     Spacer()
-                    
+
                     ZStack {
                         Circle()
                             .fill(Color.white)
                             .scaledToFit()
                             .padding(21)
 
-                        
-                        Image(isTodayCheckInCompleted ? "galochkaIcon" : "хIcon")
+                        Image(vm.isTodayCheckInCompleted ? "galochkaIcon" : "хIcon")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 20)
                     }
-                    .shadow(
-                        color: .black.opacity(0.25),
-                        radius: 4,
-                        x: 0,
-                        y: 4
-                    )
+                    .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 4)
                 }
             }
             .frame(height: 85)
@@ -135,77 +127,14 @@ struct HomeScreenView: View {
             .shadow(color: .black.opacity(0.25), radius: 2, x: 0, y: 2)
         }
     }
-
-    // MARK: - Core logic
-    
-    private func syncTodayIfNeeded() {
-        do {
-            let manager = DayRecordsManager(context: context, calendar: calendar)
-
-            if session.user.periodDay {
-                try manager.setPeriodDay(for: Date(), isPeriodDay: true)
-            }
-
-            reloadTodayState()
-            reloadTodayCheckInState()
-            calendarRefreshTrigger += 1
-        } catch {
-            reloadTodayState()
-            reloadTodayCheckInState()
-            calendarRefreshTrigger += 1
-        }
-    }
-    
-    private func reloadTodayCheckInState() {
-        do {
-            let manager = DayRecordsManager(context: context, calendar: calendar)
-            let today = calendar.startOfDay(for: Date())
-
-            if let record = try manager.fetchRecord(for: today) {
-                isTodayCheckInCompleted = (record.mood >= 0 && record.painLevel >= 0 && record.energy >= 0)
-            } else {
-                isTodayCheckInCompleted = false
-            }
-        } catch {
-            isTodayCheckInCompleted = false
-        }
-    }
-
-    private func reloadTodayState() {
-        do {
-            let manager = DayRecordsManager(context: context, calendar: calendar)
-            let today = calendar.startOfDay(for: Date())
-            let record = try manager.fetchRecord(for: today)
-            isTodayPeriodDay = record?.isPeriodDay ?? false
-        } catch {
-            isTodayPeriodDay = false
-        }
-    }
-
-    private func startPeriodToday() {
-        do {
-            session.startPeriod()
-            let manager = DayRecordsManager(context: context, calendar: calendar)
-            try manager.setPeriodDay(for: Date(), isPeriodDay: true)
-            isTodayPeriodDay = true
-            calendarRefreshTrigger += 1
-        } catch {
-            
-        }
-    }
-
-    private func endPeriodToday() {
-        do {
-            session.stopPeriod()
-            let manager = DayRecordsManager(context: context, calendar: calendar)
-            try manager.setPeriodDay(for: Date(), isPeriodDay: false)
-            try manager.clearFuturePeriodDays(from: Date())
-
-            isTodayPeriodDay = false
-            calendarRefreshTrigger += 1
-        } catch {
-            
-        }
-    }
 }
 
+#Preview {
+    HomeScreenView(
+        selectedTab: .constant(0),
+        calendarSelectedDate: .constant(Date()),
+        context: CoreDataStack.shared.context
+    )
+    .environment(\.managedObjectContext, CoreDataStack.shared.context)
+    .environmentObject(UserSession())
+}

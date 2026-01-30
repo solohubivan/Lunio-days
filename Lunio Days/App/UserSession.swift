@@ -32,16 +32,16 @@ final class UserSession: ObservableObject {
     }
     
     func updateLastPeriodStarted(_ date: Date?) {
-            if user.initialUserInfo == nil {
-                user.initialUserInfo = InitialUserInfo(
-                    lastPeriodStarted: nil,
-                    periodDuration: nil
-                )
-            }
-
-            user.initialUserInfo?.lastPeriodStarted = date
-            Self.save(user, to: storageKey)
+        if user.initialUserInfo == nil {
+            user.initialUserInfo = InitialUserInfo(
+                lastPeriodStarted: nil,
+                periodDuration: nil
+            )
         }
+
+        user.initialUserInfo?.lastPeriodStarted = date
+        Self.save(user, to: storageKey)
+    }
 
     func updatePeriodDuration(_ value: Int?) {
         if user.initialUserInfo == nil {
@@ -53,11 +53,6 @@ final class UserSession: ObservableObject {
         user.initialUserInfo?.periodDuration = value
         Self.save(user, to: storageKey)
     }
-
-        
-    
-    
-    
     
     func startPeriod() {
         user.periodDay = true

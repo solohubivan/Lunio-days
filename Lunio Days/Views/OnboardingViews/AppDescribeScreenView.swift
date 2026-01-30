@@ -107,7 +107,6 @@ struct AppDescribeScreenView: View {
     }
 
     private func onNextTap() {
-        //тут гард юзай
         if pageIndex < pages.count - 1 {
             pageIndex += 1
         } else {

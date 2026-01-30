@@ -20,8 +20,6 @@ struct UserProfileView: View {
     @State private var username: String = ""
     @State private var pickedAvatar: UIImage? = nil
     
-    
-
     var body: some View {
         ZStack {
             
@@ -124,15 +122,17 @@ struct UserProfileView: View {
                     .foregroundColor(._22)
                     .font(.phetsarath(.bold, size: 16))
             ) { }
-            .submitLabel(.done)
-            .keyboardType(.default)
-            .textContentType(.name)
-            .textInputAutocapitalization(.words)
-            .onChange(of: username) { newValue in
-                if newValue.count > 25 {
-                    username = String(newValue.prefix(25))
+                .foregroundColor(._22)
+                .font(.phetsarath(.bold, size: 16))
+                .submitLabel(.done)
+                .keyboardType(.default)
+                .textContentType(.name)
+                .textInputAutocapitalization(.words)
+                .onChange(of: username) { newValue in
+                    if newValue.count > 25 {
+                        username = String(newValue.prefix(25))
+                    }
                 }
-            }
             
             Image("editIcon")
                 .resizable()

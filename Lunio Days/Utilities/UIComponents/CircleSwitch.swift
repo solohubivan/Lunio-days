@@ -59,3 +59,7 @@ struct CircleSwitch: View {
         .buttonStyle(.plain)
     }
 }
+
+#Preview {
+    CircleSwitch(isOn: .constant(true))
+}

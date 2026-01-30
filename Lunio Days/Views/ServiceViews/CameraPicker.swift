@@ -9,10 +9,11 @@ import SwiftUI
 import UIKit
 
 struct CameraPicker: UIViewControllerRepresentable {
-
-    let onPick: (UIImage) -> Void
+    
     @Environment(\.presentationMode) private var presentationMode
 
+    let onPick: (UIImage) -> Void
+    
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.sourceType = .camera

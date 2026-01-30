@@ -57,7 +57,7 @@ struct CheckInSuccesView: View {
         }
         .font(.phetsarath(.bold, size: 20))
         .buttonStyle(FullWidthButtonStyle())
-        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+        .shadow(color: .black.opacity(0.3), radius: 2, y: 2)
     }
 }
 

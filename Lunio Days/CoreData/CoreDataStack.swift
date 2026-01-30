@@ -8,6 +8,7 @@
 import CoreData
 
 final class CoreDataStack {
+    
     static let shared = CoreDataStack()
 
     let container: NSPersistentContainer

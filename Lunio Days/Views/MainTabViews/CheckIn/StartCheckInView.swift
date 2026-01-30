@@ -53,6 +53,4 @@ struct StartCheckInView: View {
 
 #Preview {
     StartCheckInView()
-//    MainTabView()
-//        .environmentObject(UserSession())
 }

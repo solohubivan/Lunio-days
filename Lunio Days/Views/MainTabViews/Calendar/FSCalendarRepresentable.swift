@@ -59,51 +59,47 @@ struct FSCalendarRepresentable: UIViewRepresentable {
 
         calendar.select(selectedDate)
         calendar.setCurrentPage(currentPage, animated: false)
-
         
         lowercaseWeekdayLabels(in: calendar)
-
         addWeekdaySeparator(to: calendar)
-        
         
         return calendar
     }
-
-
+    
     func updateUIView(_ uiView: FSCalendar, context: Context) {
-           
-            context.coordinator.markedDays = markedDays
-            context.coordinator.checkInDays = checkInDays
+        context.coordinator.markedDays = markedDays
+        context.coordinator.checkInDays = checkInDays
 
-            let newHash = markedDays.hashValue ^ checkInDays.hashValue
-            if context.coordinator.combinedHash != newHash {
-                context.coordinator.combinedHash = newHash
+        let newHash = markedDays.hashValue ^ checkInDays.hashValue
+        if context.coordinator.combinedHash != newHash {
+            context.coordinator.combinedHash = newHash
 
-                if uiView.bounds.size == .zero {
-                    DispatchQueue.main.async { uiView.reloadData() }
-                } else {
-                    UIView.performWithoutAnimation { uiView.reloadData() }
-                }
-            }
-
-            if uiView.selectedDate != selectedDate {
-                uiView.select(selectedDate)
-            }
-
-            if !Calendar.current.isDate(uiView.currentPage, equalTo: currentPage, toGranularity: .month) {
-                uiView.setCurrentPage(currentPage, animated: true)
+            if uiView.bounds.size == .zero {
+                DispatchQueue.main.async { uiView.reloadData() }
+            } else {
+                UIView.performWithoutAnimation { uiView.reloadData() }
             }
         }
+
+        if uiView.selectedDate != selectedDate {
+            uiView.select(selectedDate)
+        }
+
+        if !Calendar.current.isDate(uiView.currentPage, equalTo: currentPage, toGranularity: .month) {
+            uiView.setCurrentPage(currentPage, animated: true)
+        }
+    }
     
     func makeCoordinator() -> Coordinator {
-            Coordinator(
-                selectedDate: $selectedDate,
-                currentPage: $currentPage,
-                markedDays: markedDays,
-                checkInDays: checkInDays
-            )
-        }
+        Coordinator(
+            selectedDate: $selectedDate,
+            currentPage: $currentPage,
+            markedDays: markedDays,
+            checkInDays: checkInDays
+        )
+    }
     
+    // MARK: - Private methods
     private func addWeekdaySeparator(to calendar: FSCalendar) {
         let tag = 987_654
 
@@ -130,52 +126,31 @@ struct FSCalendarRepresentable: UIViewRepresentable {
         }
     }
 
+    // MARK: - Coordinator
+    final class Coordinator: NSObject, FSCalendarDelegate, FSCalendarDataSource, FSCalendarDelegateAppearance {
 
+        @Binding var selectedDate: Date
+        @Binding var currentPage: Date
 
-    final class Coordinator: NSObject,
-                                 FSCalendarDelegate,
-                                 FSCalendarDataSource,
-                                 FSCalendarDelegateAppearance {
+        var markedDays: Set<Date>
+        var checkInDays: Set<Date>
 
-            @Binding var selectedDate: Date
-            @Binding var currentPage: Date
+        var combinedHash: Int = 0
 
-            var markedDays: Set<Date>
-            var checkInDays: Set<Date>
+        private let cal = Calendar.current
 
-            var combinedHash: Int = 0
-
-            private let cal = Calendar.current
-
-            init(selectedDate: Binding<Date>,
-                 currentPage: Binding<Date>,
-                 markedDays: Set<Date>,
-                 checkInDays: Set<Date>) {
-
-                _selectedDate = selectedDate
-                _currentPage = currentPage
-                self.markedDays = markedDays
-                self.checkInDays = checkInDays
-                self.combinedHash = markedDays.hashValue ^ checkInDays.hashValue
-            }
-        
-       
-        private func norm(_ date: Date) -> Date {
-            cal.date(bySettingHour: 12, minute: 0, second: 0, of: date) ?? date
-        }
-
-        private func isMarked(_ date: Date) -> Bool {
-            markedDays.contains(norm(date))
+        init(selectedDate: Binding<Date>,
+             currentPage: Binding<Date>,
+             markedDays: Set<Date>,
+             checkInDays: Set<Date>) {
+            
+            _selectedDate = selectedDate
+            _currentPage = currentPage
+            self.markedDays = markedDays
+            self.checkInDays = checkInDays
+            self.combinedHash = markedDays.hashValue ^ checkInDays.hashValue
         }
         
-        private func hasCheckIn(_ date: Date) -> Bool {
-                    checkInDays.contains(norm(date))
-                }
-        
-        
-        
-        
-
         func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
             selectedDate = date
             if monthPosition != .current {
@@ -187,12 +162,10 @@ struct FSCalendarRepresentable: UIViewRepresentable {
             currentPage = calendar.currentPage
         }
         
-        
         func calendar(_ calendar: FSCalendar,
                       appearance: FSCalendarAppearance,
                       titleSelectionColorFor date: Date) -> UIColor? {
 
-            // якщо це НЕ period day -> чорний
             return isMarked(date) ? .white : .brownText
         }
         
@@ -200,7 +173,6 @@ struct FSCalendarRepresentable: UIViewRepresentable {
                       appearance: FSCalendarAppearance,
                       fillSelectionColorFor date: Date) -> UIColor? {
 
-            // якщо period day -> рожевий фон навіть у selected
             return isMarked(date) ? UIColor.tabbarChoosedItem : .clear
         }
         
@@ -218,26 +190,37 @@ struct FSCalendarRepresentable: UIViewRepresentable {
             return isMarked(date) ? .white : nil
         }
         
-        
         func calendar(_ calendar: FSCalendar, numberOfEventsFor date: Date) -> Int {
-                    return hasCheckIn(date) ? 1 : 0
-                }
+            return hasCheckIn(date) ? 1 : 0
+        }
 
-                func calendar(_ calendar: FSCalendar,
-                              appearance: FSCalendarAppearance,
-                              eventDefaultColorsFor date: Date) -> [UIColor]? {
+        func calendar(_ calendar: FSCalendar,
+                      appearance: FSCalendarAppearance,
+                      eventDefaultColorsFor date: Date) -> [UIColor]? {
 
-                    guard hasCheckIn(date) else { return nil }
-                    return [UIColor._111] // або UIColor(Color.tabbarChoosedItem)
-                }
+            guard hasCheckIn(date) else { return nil }
+            return [UIColor._111]
+        }
 
-                func calendar(_ calendar: FSCalendar,
-                              appearance: FSCalendarAppearance,
-                              eventSelectionColorsFor date: Date) -> [UIColor]? {
+        func calendar(_ calendar: FSCalendar,
+                      appearance: FSCalendarAppearance,
+                      eventSelectionColorsFor date: Date) -> [UIColor]? {
 
-                    guard hasCheckIn(date) else { return nil }
-                    return [UIColor.systemPink]
-                }
+            guard hasCheckIn(date) else { return nil }
+            return [UIColor.systemPink]
+        }
         
+        // MARK: - Private methods
+        private func norm(_ date: Date) -> Date {
+            cal.date(bySettingHour: 12, minute: 0, second: 0, of: date) ?? date
+        }
+
+        private func isMarked(_ date: Date) -> Bool {
+            markedDays.contains(norm(date))
+        }
+        
+        private func hasCheckIn(_ date: Date) -> Bool {
+            checkInDays.contains(norm(date))
+        }
     }
 }

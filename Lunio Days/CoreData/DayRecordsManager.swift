@@ -133,26 +133,6 @@ final class DayRecordsManager {
     func normalize(_ date: Date) -> Date {
         calendar.date(bySettingHour: 12, minute: 0, second: 0, of: date) ?? date
     }
-
-    
-//    func deleteAllDayRecords() throws {
-//        let request: NSFetchRequest<NSFetchRequestResult> = DayRecord.fetchRequest()
-//        let deleteRequest = NSBatchDeleteRequest(fetchRequest: request)
-//        deleteRequest.resultType = .resultTypeObjectIDs
-//
-//        let result = try context.execute(deleteRequest) as? NSBatchDeleteResult
-//        let objectIDs = result?.result as? [NSManagedObjectID] ?? []
-//
-//        // важливо для SwiftUI/FetchRequest щоб UI одразу оновився
-//        NSManagedObjectContext.mergeChanges(
-//            fromRemoteContextSave: [NSDeletedObjectsKey: objectIDs],
-//            into: [context]
-//        )
-//
-//        print("✅ Deleted DayRecord count:", objectIDs.count)
-//    }
-    
-    
     
     private func fetchOrCreateRecord(for date: Date) throws -> DayRecord {
         let normalized = normalize(date)
@@ -172,22 +152,4 @@ final class DayRecordsManager {
 
         return record
     }
-    
-    
-//    func debugPrintAllRecords() {
-//        do {
-//            let request: NSFetchRequest<DayRecord> = DayRecord.fetchRequest()
-//            request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
-//            let results = try context.fetch(request)
-//
-//            print("======== DAY RECORDS (\(results.count)) ========")
-//            for r in results {
-//                let d = r.date ?? Date()
-//                print("📅 \(d) | period=\(r.isPeriodDay) | mood=\(r.mood) pain=\(r.painLevel) energy=\(r.energy)")
-//            }
-//            print("===============================================")
-//        } catch {
-//            print("❌ debugPrintAllRecords error:", error)
-//        }
-//    }
 }

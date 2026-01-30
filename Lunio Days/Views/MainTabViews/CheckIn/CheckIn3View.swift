@@ -106,11 +106,11 @@ struct CheckIn3View: View {
         .font(.phetsarath(.bold, size: 20))
         .buttonStyle(
             FullWidthButtonStyle(
-                backgroundColor: isDisabled ? Color.gray.opacity(0.6) : nil,
+                backgroundColor: isDisabled ? Color.gray.opacity(0.2) : nil,
                 gradientTextColor: .buttonStateText,
                 solidTextColor: .white
             )
         )
-        .shadow(color: .black.opacity(isDisabled ? 0.0 : 0.3), radius: 4, y: 2)
+        .shadow(color: .black.opacity(0.3), radius: 2, y: 2)
     }
 }
