@@ -6,17 +6,26 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct WeekCalendarView: View {
-    
-    @EnvironmentObject private var session: UserSession
+
+    @Environment(\.managedObjectContext) private var context
 
     private let calendar = Calendar.current
+    
+    @Binding var selectedTab: Int              // ✅
+        @Binding var calendarSelectedDate: Date
+
+    @State private var periodDays: Set<Date> = []
+    @State private var checkInDays: Set<Date> = []
+
+    let refreshTrigger: Int
 
     var body: some View {
         HStack(spacing: 4) {
             Spacer()
-            
+
             ForEach(0..<7, id: \.self) { index in
                 let offset = index - 3
                 dayCell(for: offset, isToday: offset == 0)
@@ -29,9 +38,40 @@ struct WeekCalendarView: View {
         .padding(.vertical, 10)
         .background(Color.white)
         .cornerRadius(8)
+        .onAppear { fetchWeek() }
+        .onChange(of: refreshTrigger) { _ in fetchWeek() }
+        .onChange(of: calendar.startOfDay(for: Date())) { _ in fetchWeek() }
     }
 
+    private func fetchWeek() {
+        do {
+            let start = calendar.startOfDay(for: calendar.date(byAdding: .day, value: -3, to: Date()) ?? Date())
+            let end   = calendar.startOfDay(for: calendar.date(byAdding: .day, value:  3, to: Date()) ?? Date())
 
+            let manager = DayRecordsManager(context: context, calendar: calendar)
+
+            periodDays  = try manager.fetchPeriodDays(in: start...end)
+            checkInDays = try manager.fetchCheckInDays(in: start...end)
+            
+        } catch {
+            periodDays = []
+            checkInDays = []
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func normalize(_ date: Date) -> Date {
+        calendar.date(bySettingHour: 12, minute: 0, second: 0, of: date) ?? date
+    }
+
+    private func hasCheckIn(date: Date) -> Bool {
+        checkInDays.contains(normalize(date))
+    }
+
+    private func isPeriodDay(date: Date) -> Bool {
+        periodDays.contains(normalize(date))
+    }
 
     private func weekdayTitle(from date: Date) -> String {
         let formatter = DateFormatter()
@@ -39,78 +79,57 @@ struct WeekCalendarView: View {
         formatter.dateFormat = "EEE"
         return formatter.string(from: date).lowercased()
     }
-    
-    private func isPeriodDay(date: Date) -> Bool {
-        guard session.user.periodDay else { return false }
 
-        let today = calendar.startOfDay(for: Date())
-        let target = calendar.startOfDay(for: date)
-
-        // приклад: сьогодні + 2 дні назад
-        let diff = calendar.dateComponents([.day], from: target, to: today).day ?? 0
-        return diff >= 0 && diff <= 2
-    }
-    
+    // MARK: - Cell
 
     private func dayCell(for offset: Int, isToday: Bool) -> some View {
         let date = calendar.date(byAdding: .day, value: offset, to: Date()) ?? Date()
         let dayNumber = calendar.component(.day, from: date)
 
+        let showDot = hasCheckIn(date: date)
         let isPeriod = isPeriodDay(date: date)
-        let isTodayPeriod = isToday && session.user.periodDay
 
-        // фон
-        let backgroundColor: Color = {
-            if isTodayPeriod { return ._11 }
-            if isPeriod { return ._111 }
-            return .white
-        }()
-
-        // колір weekday (EEE)
-        let weekdayColor: Color = {
-            if isPeriod { return .black }
-            if isToday { return .pink }
-            return .black
-        }()
-
-        // колір числа
-        let numberColor: Color = {
-            if isTodayPeriod { return .black }
-            if isPeriod { return .white }
-            if isToday { return .pink }
-            return .black
-        }()
+        let backgroundColor: Color = isPeriod ? (isToday ? ._11 : ._111) : .white
+        let numberColor: Color = isPeriod ? (isToday ? .black : .white) : (isToday ? ._111 : .black)
+        let weekdayColor: Color = isPeriod ? (isToday ? .black : ._111) : (isToday ? ._111 : .black)
+        let borderLine: Color = (isToday && !isPeriod) ? ._111 : .clear
         
-        let boardLine: Color = {
-            if isToday && !isPeriod { return .pink }
-            return .clear
-        }()
+        let checkInPoint: Color = isPeriod ? (isToday ? .clear : .white) : (isToday ? .clear : ._111)
 
         return VStack(spacing: 0) {
             Text(weekdayTitle(from: date))
                 .font(.phetsarath(.regular, size: 12))
                 .foregroundColor(weekdayColor)
 
-            Text("\(dayNumber)")
-                .font(.phetsarath(.regular, size: 16))
-                .foregroundColor(numberColor)
-                .frame(width: 44, height: 44)
-                .background(backgroundColor)
-                .cornerRadius(4)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(boardLine, lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.25), radius: 2, x: 0, y: 2)
-            
+            ZStack {
+                Text("\(dayNumber)")
+                    .font(.phetsarath(.regular, size: 16))
+                    .foregroundColor(numberColor)
+                    .frame(width: 44, height: 44)
+                    .background(backgroundColor)
+                    .cornerRadius(4)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(borderLine, lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.25), radius: 2, x: 0, y: 2)
+
+                if showDot {
+                    VStack {
+                        Circle()
+                            .fill(checkInPoint)
+                            .frame(width: 6, height: 6)
+                            .padding(.top, 7)
+                        Spacer()
+                    }
+                }
+            }
         }
         .frame(maxWidth: .infinity)
+        .contentShape(Rectangle()) // ✅ щоб тапався весь блок
+            .onTapGesture {
+                calendarSelectedDate = date   // ✅ яку дату вибрали у week view
+                selectedTab = 1              // ✅ переключились на таб календаря
+            }
     }
-}
-
-
-#Preview {
-//    WeekCalendarView()
-    MainTabView()
-        .environmentObject(UserSession())
 }

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct OnboardingQuestionsScreenView: View {
     
+    @Environment(\.managedObjectContext) private var context
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @EnvironmentObject private var session: UserSession
     @State private var showMainTab = false
@@ -115,6 +116,21 @@ struct OnboardingQuestionsScreenView: View {
             pageIndex += 1
 
         case 2:
+            let lastStart = session.user.initialUserInfo?.lastPeriodStarted
+            let durationOpt = session.user.initialUserInfo?.periodDuration
+
+            if let lastStart {
+                let duration = max(durationOpt ?? 1, 1)
+                do {
+                    let manager = DayRecordsManager(context: context)
+                    try manager.saveInitialPeriodDays(lastPeriodStarted: lastStart, durationDays: duration)
+                } catch {
+                    
+                }
+            } else {
+                
+            }
+
             withAnimation(.easeInOut(duration: 0.35)) {
                 hasCompletedOnboarding = true
                 showMainTab = true

@@ -9,10 +9,10 @@ import SwiftUI
 
 struct CheckIn1View: View {
     
+    @Binding var selectedMood: Mood?
+    
     let onBack: () -> Void
     let onNext: () -> Void
-
-    @State private var selectedIndex: Int? = nil
 
     var body: some View {
         ZStack {
@@ -77,7 +77,10 @@ struct CheckIn1View: View {
     }
 
     private var titleLabel: some View {
-        Text(makeHighlightedText(fullText: "How are you feeling today?", baseColor: .brownText, highlights: ["feeling": ._111])
+        Text(makeHighlightedText(
+            fullText: "How are you feeling today?",
+            baseColor: .brownText,
+            highlights: ["feeling": ._111])
         )
         .font(.petrona(.bold, size: 32))
         .multilineTextAlignment(.center)
@@ -88,46 +91,53 @@ struct CheckIn1View: View {
     
     private var inputButtons: some View {
         VStack(spacing: 25) {
-            CheckInChoiceButton(
-                imageName: "smile",
-                title: "Good",
-                index: 0,
-                selectedIndex: selectedIndex,
-                onSelect: { selectedIndex = $0 }
-            )
-
-            CheckInChoiceButton(
-                imageName: "okSmile",
-                title: "Okay",
-                index: 1,
-                selectedIndex: selectedIndex,
-                onSelect: { selectedIndex = $0 }
-            )
-
-            CheckInChoiceButton(
-                imageName: "sadSmile",
-                title: "Bad",
-                index: 2,
-                selectedIndex: selectedIndex,
-                onSelect: { selectedIndex = $0 }
-            )
+            ForEach(Mood.allCases, id: \.rawValue) { item in
+                CheckInChoiceButton(
+                    imageName: item.imageName,
+                    title: item.title,
+                    index: Int(item.rawValue),
+                    selectedIndex: selectedMood.map { Int($0.rawValue) },
+                    onSelect: { _ in selectedMood = item }
+                )
+            }
         }
     }
     
     private var nextButton: some View {
-        Button("Next") {
+        let isDisabled = (selectedMood == nil)
+
+        return Button("Next") {
             onNext()
         }
+        .disabled(isDisabled)
         .font(.phetsarath(.bold, size: 20))
-        .buttonStyle(FullWidthButtonStyle())
-        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+        .buttonStyle(
+            FullWidthButtonStyle(
+                backgroundColor: isDisabled ? Color.gray.opacity(0.6) : nil,
+                gradientTextColor: .buttonStateText,
+                solidTextColor: .white
+            )
+        )
+        .shadow(color: .black.opacity(isDisabled ? 0.0 : 0.3), radius: 4, y: 2)
     }
 }
 
 #Preview {
-    CheckIn1View(onBack: {
-        print("Back tapped")
-    }, onNext: {
-        print("Next tapped")
-    })
+    PreviewWrapper()
+}
+
+private struct PreviewWrapper: View {
+    @State private var mood: Mood? = nil
+
+    var body: some View {
+        CheckIn1View(
+            selectedMood: $mood,
+            onBack: {
+                print("Back tapped")
+            },
+            onNext: {
+                print("Next tapped, mood:", mood as Any)
+            }
+        )
+    }
 }

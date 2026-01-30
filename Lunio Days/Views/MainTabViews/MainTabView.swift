@@ -10,6 +10,7 @@ import SwiftUI
 struct MainTabView: View {
     
     @State private var selectedTab = 0
+    @State private var calendarSelectedDate: Date = .init()
     
     @State private var showUserProfile = false
     @State private var showPrivacyPolicy = false
@@ -24,7 +25,7 @@ struct MainTabView: View {
                 contentView
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
-                CustomTabBarView(selectedTab: $selectedTab)
+                CustomTabBarView(selectedTab: $selectedTab, calendarSelectedDate: $calendarSelectedDate)
                     .frame(height: tabBarHeight)
                     .background(Color.mainTabbar.ignoresSafeArea(edges: .bottom))
                     .clipShape(TopRoundedShape(radius: 35))
@@ -72,11 +73,12 @@ struct MainTabView: View {
     private var contentView: some View {
         switch selectedTab {
         case 0:
-            HomeScreenView()
+            HomeScreenView(selectedTab: $selectedTab, calendarSelectedDate: $calendarSelectedDate)
         case 1:
-            CalendarScreenView()
+//            CalendarScreenView(selectedTab: $selectedTab)
+            CalendarScreenView(selectedTab: $selectedTab, selectedDate: $calendarSelectedDate)
         case 2:
-            CheckInMainScreenView()
+            CheckInMainScreenView(selectedTab: $selectedTab, calendarSelectedDate: $calendarSelectedDate)
         case 3:
             SettingsScreenView(
                 onOpenProfile: { showUserProfile = true },
@@ -91,12 +93,16 @@ struct MainTabView: View {
 
 private struct CustomTabBarView: View {
     @Binding var selectedTab: Int
+    @Binding var calendarSelectedDate: Date
 
     var body: some View {
         HStack {
             tabButton(systemImage: "homeTabbarIcon", index: 0)
             Spacer()
-            tabButton(systemImage: "calendarTabbarIcon", index: 1)
+//            tabButton(systemImage: "calendarTabbarIcon", index: 1)
+            tabButton(systemImage: "calendarTabbarIcon", index: 1, onTap: {
+                            calendarSelectedDate = Calendar.current.startOfDay(for: Date())
+                        })
             Spacer()
             tabButton(systemImage: "checkTabbarIcon", index: 2)
             Spacer()
@@ -109,9 +115,13 @@ private struct CustomTabBarView: View {
     
     private func tabButton(
         systemImage: String,
-        index: Int
+        index: Int,
+        onTap: (() -> Void)? = nil
     ) -> some View {
         Button {
+            if selectedTab != index {
+                            onTap?()
+                        }
             selectedTab = index
         } label: {
             ZStack {

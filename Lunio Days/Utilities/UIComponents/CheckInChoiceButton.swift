@@ -35,6 +35,7 @@ struct CheckInChoiceButton: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 72)
+            .contentShape(Rectangle())
             .background(Color.clear)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)

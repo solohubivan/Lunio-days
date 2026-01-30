@@ -9,10 +9,12 @@ import SwiftUI
 
 struct CheckIn2View: View {
     
+    @Binding var selectedPain: PainLevel?
+    
     let onBack: () -> Void
     let onNext: () -> Void
 
-    @State private var selectedIndex: Int? = nil
+//    @State private var selectedIndex: Int? = nil
 
     var body: some View {
         ZStack {
@@ -86,48 +88,89 @@ struct CheckIn2View: View {
         .padding(.horizontal, 20)
     }
     
+//    private var inputButtons: some View {
+//        VStack(spacing: 25) {
+//            CheckInChoiceButton(
+//                imageName: "smile",
+//                title: "No pain",
+//                index: 0,
+//                selectedIndex: selectedIndex,
+//                onSelect: { selectedIndex = $0 }
+//            )
+//
+//            CheckInChoiceButton(
+//                imageName: "okSmile",
+//                title: "Mild pain",
+//                index: 1,
+//                selectedIndex: selectedIndex,
+//                onSelect: { selectedIndex = $0 }
+//            )
+//
+//            CheckInChoiceButton(
+//                imageName: "sadSmile",
+//                title: "Strong pain",
+//                index: 2,
+//                selectedIndex: selectedIndex,
+//                onSelect: { selectedIndex = $0 }
+//            )
+//        }
+//    }
+//    
+//    private var nextButton: some View {
+//        Button("Next") {
+//            onNext()
+//        }
+//        .font(.phetsarath(.bold, size: 20))
+//        .buttonStyle(FullWidthButtonStyle())
+//        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+//    }
     private var inputButtons: some View {
-        VStack(spacing: 25) {
-            CheckInChoiceButton(
-                imageName: "smile",
-                title: "No pain",
-                index: 0,
-                selectedIndex: selectedIndex,
-                onSelect: { selectedIndex = $0 }
-            )
-
-            CheckInChoiceButton(
-                imageName: "okSmile",
-                title: "Mild pain",
-                index: 1,
-                selectedIndex: selectedIndex,
-                onSelect: { selectedIndex = $0 }
-            )
-
-            CheckInChoiceButton(
-                imageName: "sadSmile",
-                title: "Strong pain",
-                index: 2,
-                selectedIndex: selectedIndex,
-                onSelect: { selectedIndex = $0 }
-            )
+            VStack(spacing: 25) {
+                ForEach(PainLevel.allCases, id: \.rawValue) { item in
+                    CheckInChoiceButton(
+                        imageName: item.imageName,
+                        title: item.title,
+                        index: Int(item.rawValue),
+                        selectedIndex: selectedPain.map { Int($0.rawValue) },
+                        onSelect: { _ in selectedPain = item }
+                    )
+                }
+            }
         }
-    }
-    
+
+//        private var nextButton: some View {
+//            Button("Next") {
+//                onNext()
+//            }
+//            .disabled(selectedPain == nil)
+//            .font(.phetsarath(.bold, size: 20))
+//            .buttonStyle(FullWidthButtonStyle())
+//            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+//        }
     private var nextButton: some View {
-        Button("Next") {
+        let isDisabled = (selectedPain == nil)
+
+        return Button("Next") {
             onNext()
         }
+        .disabled(isDisabled)
         .font(.phetsarath(.bold, size: 20))
-        .buttonStyle(FullWidthButtonStyle())
-        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+        .buttonStyle(
+            FullWidthButtonStyle(
+                backgroundColor: isDisabled ? Color.gray.opacity(0.6) : nil,
+                gradientTextColor: .buttonStateText, // як зараз на градієнті
+                solidTextColor: .white               // ✅ білий на сірому
+            )
+        )
+        .shadow(color: .black.opacity(isDisabled ? 0.0 : 0.3), radius: 4, y: 2) // опціонально
     }
+    
 }
 
-#Preview {
-    CheckIn2View(onBack: {
-        print("Back tapped")
-    }, onNext: {
-        print("Back tapped")
-    })
-}
+//#Preview {
+//    CheckIn2View(onBack: {
+//        print("Back tapped")
+//    }, onNext: {
+//        print("Back tapped")
+//    })
+//}
