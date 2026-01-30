@@ -15,6 +15,8 @@ struct MainTabView: View {
     @State private var showUserProfile = false
     @State private var showPrivacyPolicy = false
     @State private var showTerms = false
+    
+    @AppStorage("soundEnabled") private var soundEnabled: Bool = false
 
     
     private let tabBarHeight: CGFloat = 96
@@ -65,6 +67,11 @@ struct MainTabView: View {
         .animation(.easeInOut(duration: 0.25), value: showUserProfile)
         .animation(.easeInOut(duration: 0.25), value: showPrivacyPolicy)
         .animation(.easeInOut(duration: 0.25), value: showTerms)
+        .simultaneousGesture(
+            TapGesture().onEnded {
+                AppSounds.playTapIfAllowed(soundEnabled)
+            }
+        )
     }
 
     @ViewBuilder
