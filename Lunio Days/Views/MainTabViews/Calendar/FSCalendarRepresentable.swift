@@ -14,6 +14,7 @@ struct FSCalendarRepresentable: UIViewRepresentable {
     
     var markedDays: Set<Date>
     var checkInDays: Set<Date>
+    var soundEnabled: Bool
 
     private let cal = Calendar.current
 
@@ -95,7 +96,8 @@ struct FSCalendarRepresentable: UIViewRepresentable {
             selectedDate: $selectedDate,
             currentPage: $currentPage,
             markedDays: markedDays,
-            checkInDays: checkInDays
+            checkInDays: checkInDays,
+            soundEnabled: soundEnabled
         )
     }
     
@@ -134,6 +136,7 @@ struct FSCalendarRepresentable: UIViewRepresentable {
 
         var markedDays: Set<Date>
         var checkInDays: Set<Date>
+        var soundEnabled: Bool
 
         var combinedHash: Int = 0
 
@@ -142,17 +145,22 @@ struct FSCalendarRepresentable: UIViewRepresentable {
         init(selectedDate: Binding<Date>,
              currentPage: Binding<Date>,
              markedDays: Set<Date>,
-             checkInDays: Set<Date>) {
+             checkInDays: Set<Date>,
+             soundEnabled: Bool) {
             
             _selectedDate = selectedDate
             _currentPage = currentPage
             self.markedDays = markedDays
             self.checkInDays = checkInDays
+            self.soundEnabled = soundEnabled
             self.combinedHash = markedDays.hashValue ^ checkInDays.hashValue
         }
         
         func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
             selectedDate = date
+            
+            AppSounds.playTapIfAllowed(soundEnabled)
+            
             if monthPosition != .current {
                 currentPage = calendar.currentPage
             }

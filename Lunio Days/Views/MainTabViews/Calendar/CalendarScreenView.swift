@@ -14,7 +14,7 @@ struct CalendarScreenView: View {
     @Binding var selectedDate: Date
 
     @Environment(\.managedObjectContext) private var context
-
+    @AppStorage("soundEnabled") private var soundEnabled: Bool = false
     @StateObject private var vm: CalendarScreenViewModel
 
     init(
@@ -66,7 +66,8 @@ struct CalendarScreenView: View {
                 selectedDate: $selectedDate,
                 currentPage: $vm.currentPage,
                 markedDays: vm.periodDays,
-                checkInDays: vm.checkInDays
+                checkInDays: vm.checkInDays,
+                soundEnabled: soundEnabled
             )
             .frame(height: 290)
         }

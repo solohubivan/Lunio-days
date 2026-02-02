@@ -67,11 +67,9 @@ struct MainTabView: View {
         .animation(.easeInOut(duration: 0.25), value: showUserProfile)
         .animation(.easeInOut(duration: 0.25), value: showPrivacyPolicy)
         .animation(.easeInOut(duration: 0.25), value: showTerms)
-        .simultaneousGesture(
-            TapGesture().onEnded {
-                AppSounds.playTapIfAllowed(soundEnabled)
-            }
-        )
+        .onTapGestureIfAllowed(enabled: soundEnabled && selectedTab != 1) {
+            AppSounds.playTapIfAllowed(true)
+        }
     }
 
     @ViewBuilder
@@ -123,8 +121,8 @@ private struct CustomTabBarView: View {
     ) -> some View {
         Button {
             if selectedTab != index {
-                            onTap?()
-                        }
+                onTap?()
+            }
             selectedTab = index
         } label: {
             ZStack {
@@ -163,5 +161,18 @@ private struct CustomTabBarView: View {
             cornerRadii: CGSize(width: radius, height: radius)
         )
         return Path(path.cgPath)
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func onTapGestureIfAllowed(enabled: Bool, action: @escaping () -> Void) -> some View {
+        if enabled {
+            self.simultaneousGesture(
+                TapGesture().onEnded { action() }
+            )
+        } else {
+            self
+        }
     }
 }

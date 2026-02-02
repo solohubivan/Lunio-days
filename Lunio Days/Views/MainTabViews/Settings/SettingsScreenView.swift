@@ -15,7 +15,6 @@ struct SettingsScreenView: View {
     let onOpenPrivacyPolicy: () -> Void
     let onOpenTerms: () -> Void
     
-//    @State private var sound: Bool = false
     @AppStorage("soundEnabled") private var soundEnabled: Bool = false
 
     var body: some View {
@@ -87,7 +86,6 @@ struct SettingsScreenView: View {
 
                 Spacer()
 
-//                CircleSwitch(isOn: $sound)
                 CircleSwitch(isOn: $soundEnabled)
                     .padding(.trailing, 8)
             }
